@@ -177,19 +177,59 @@ public class MyCommandProvider {
 	
 	
 	public void knowledge() {
-			
-			IKnowledgeProperty kp_myProp = BasicMAPEKLiteLoopHelper.getKnowledgeProperty("my-prop");
-			
-			String myProp = "UNKNOWN";
-			if ( kp_myProp != null && kp_myProp.getValue() != null )
-				myProp = kp_myProp.getValue().toString();
-					
-			System.out.println("* * * * * * * * * * * * * * * * * * * * * * * *");
-			System.out.println("*  KNOWLEDGE");
-			System.out.println("* * * * * * * * * * * * * * * * * * * * * * * *");
-			System.out.println(String.format("*   my-prop: %s", myProp));
-			// ...
-			System.out.println("* * * * * * * * * * * * * * * * * * * * * * * *");
+
+		String[] kpIds = new String[] {
+				"modo-conduccion",
+				"nivel-autonomia",
+				"tipo-via",
+				"trafico-via",
+				"atencion-conductor",
+				"asiento-conductor-ocupado",
+				"asiento-copiloto-ocupado",
+				"deteccion-manos-volante",
+				"fallo-critico-sistema"
+		};
+
+		System.out.println("* * * * * * * * * * * * * * * * * * * * * * * *");
+		System.out.println("*  KNOWLEDGE");
+		System.out.println("* * * * * * * * * * * * * * * * * * * * * * * *");
+		System.out.flush();
+
+		for (String id : kpIds) {
+			String value;
+			try {
+				IKnowledgeProperty kp = BasicMAPEKLiteLoopHelper.getKnowledgeProperty(id);
+				if (kp == null) {
+					value = "NOT_REGISTERED";
+				} else {
+					Object raw = null;
+					try {
+						raw = kp.getValue();
+					} catch (Throwable getEx) {
+						value = "ERROR_GETVALUE(" + getEx.getClass().getSimpleName() + ")";
+						System.out.println(String.format("*   %s: %s", id, value));
+						System.out.flush();
+						continue;
+					}
+					if (raw == null) {
+						value = "UNKNOWN";
+					} else {
+						try {
+							value = String.valueOf(raw);
+						} catch (Throwable tsEx) {
+							value = "ERROR_TOSTRING(" + tsEx.getClass().getSimpleName() + ")";
+						}
+					}
+				}
+			} catch (Throwable t) {
+				value = "ERROR_LOOKUP(" + t.getClass().getSimpleName() + ")";
+			}
+			System.out.println(String.format("*   %s: %s", id, value));
+			System.out.flush();
+		}
+
+		System.out.println("* * * * * * * * * * * * * * * * * * * * * * * *");
+		System.out.flush();
 
 	}
 	

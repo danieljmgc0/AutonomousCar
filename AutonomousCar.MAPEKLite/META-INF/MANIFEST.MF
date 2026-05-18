@@ -38,7 +38,11 @@ Import-Package: es.upv.pros.tatami.adaptation.mapek.lite.ARC.artifacts.impl,
  es.upv.pros.tatami.osgi.utils.interfaces,
  es.upv.pros.tatami.osgi.utils.logger,
  org.osgi.framework,
+ sua.autonomouscar.devices.interfaces,
+ sua.autonomouscar.driving.interfaces,
+ sua.autonomouscar.infraestructure,
  sua.autonomouscar.infraestructure.devices.ARC,
  sua.autonomouscar.infraestructure.driving.ARC,
- sua.autonomouscar.infraestructure.interaction.ARC
+ sua.autonomouscar.infraestructure.interaction.ARC,
+ sua.autonomouscar.interfaces
 Export-Package: autonomouscar.mapek.lite.adaptation.resources

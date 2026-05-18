@@ -7,7 +7,6 @@ INDEX VERSION 1.134+/home/angela-caiqing/Documentos/UPV/SUA/AutonomousCar/.metad
 489801227.index
 3567106071.index
 4134220770.index
-1928149699.index
 111438843.index
 2438272109.index
 235259747.index
@@ -16,7 +15,6 @@ INDEX VERSION 1.134+/home/angela-caiqing/Documentos/UPV/SUA/AutonomousCar/.metad
 859063892.index
 918176654.index
 1828115667.index
-1333212277.index
 1469394020.index
 1334831689.index
 2648692412.index

@@ -3,9 +3,39 @@ package autonomouscar.mapek.lite.adaptation.starter;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
-import autonomouscar.mapek.lite.adaptation.resources.IluminacionConfortAdaptationRule;
-import autonomouscar.mapek.lite.adaptation.resources.MonitorModo;
-import autonomouscar.mapek.lite.adaptation.resources.SondaModo;
+import autonomouscar.mapek.lite.adaptation.resources.ConfiguracionHelper;
+import autonomouscar.mapek.lite.adaptation.resources.MonitorAsientoConductorOcupado;
+import autonomouscar.mapek.lite.adaptation.resources.MonitorAsientoCopilotoOcupado;
+import autonomouscar.mapek.lite.adaptation.resources.MonitorAtencionConductor;
+import autonomouscar.mapek.lite.adaptation.resources.MonitorDeteccionManosVolante;
+import autonomouscar.mapek.lite.adaptation.resources.MonitorFalloCriticoSistema;
+import autonomouscar.mapek.lite.adaptation.resources.MonitorModoConduccion;
+import autonomouscar.mapek.lite.adaptation.resources.MonitorNivelAutonomia;
+import autonomouscar.mapek.lite.adaptation.resources.MonitorTipoVia;
+import autonomouscar.mapek.lite.adaptation.resources.MonitorTraficoVia;
+import autonomouscar.mapek.lite.adaptation.resources.ReglaActivarEstadoViaAutopista;
+import autonomouscar.mapek.lite.adaptation.resources.ReglaActivarEstadoViaAutovia;
+import autonomouscar.mapek.lite.adaptation.resources.ReglaActivarEstadoViaCiudad;
+import autonomouscar.mapek.lite.adaptation.resources.ReglaActivarFallbackPlan;
+import autonomouscar.mapek.lite.adaptation.resources.ReglaActivarSensorEnFallo;
+import autonomouscar.mapek.lite.adaptation.resources.ReglaActivarTipoViaAtasco;
+import autonomouscar.mapek.lite.adaptation.resources.ReglaActivarTipoViaCiudad;
+import autonomouscar.mapek.lite.adaptation.resources.ReglaArranqueHighwayChauffer;
+import autonomouscar.mapek.lite.adaptation.resources.ReglaAtencionConductor;
+import autonomouscar.mapek.lite.adaptation.resources.ReglaAutoCuracionFalloCritico;
+import autonomouscar.mapek.lite.adaptation.resources.ReglaEnCarreteraEstandar;
+import autonomouscar.mapek.lite.adaptation.resources.ReglaManosVolante;
+import autonomouscar.mapek.lite.adaptation.resources.ReglaPriorizacionSensores;
+import autonomouscar.mapek.lite.adaptation.resources.ReglaUbicacionConductor;
+import autonomouscar.mapek.lite.adaptation.resources.SondaAsientoConductorOcupado;
+import autonomouscar.mapek.lite.adaptation.resources.SondaAsientoCopilotoOcupado;
+import autonomouscar.mapek.lite.adaptation.resources.SondaAtencionConductor;
+import autonomouscar.mapek.lite.adaptation.resources.SondaDeteccionManosVolante;
+import autonomouscar.mapek.lite.adaptation.resources.SondaFalloCriticoSistema;
+import autonomouscar.mapek.lite.adaptation.resources.SondaModoConduccion;
+import autonomouscar.mapek.lite.adaptation.resources.SondaNivelAutonomia;
+import autonomouscar.mapek.lite.adaptation.resources.SondaTipoVia;
+import autonomouscar.mapek.lite.adaptation.resources.SondaTraficoVia;
 import es.upv.pros.tatami.adaptation.mapek.lite.ARC.artifacts.interfaces.IAdaptiveReadyComponent;
 import es.upv.pros.tatami.adaptation.mapek.lite.ARC.structures.systemconfiguration.interfaces.IComponentsSystemConfiguration;
 import es.upv.pros.tatami.adaptation.mapek.lite.ARC.structures.systemconfiguration.interfaces.IRuleComponentsSystemConfiguration;
@@ -13,126 +43,188 @@ import es.upv.pros.tatami.adaptation.mapek.lite.artifacts.interfaces.IKnowledgeP
 import es.upv.pros.tatami.adaptation.mapek.lite.helpers.BasicMAPEKLiteLoopHelper;
 import es.upv.pros.tatami.adaptation.mapek.lite.helpers.SystemConfigurationHelper;
 import es.upv.pros.tatami.osgi.utils.interfaces.ITimeStamped;
-import sua.autonomouscar.infraestructure.devices.ARC.EngineARC;
-import sua.autonomouscar.infraestructure.devices.ARC.SteeringARC;
-import sua.autonomouscar.infraestructure.driving.ARC.FallbackPlanARC;
-import sua.autonomouscar.infraestructure.driving.ARC.L3_DrivingServiceARC;
 
 public class Activator implements BundleActivator {
 
 	private static BundleContext context;
 
+	private SondaModoConduccion sondaModoConduccion;
+	private SondaTipoVia sondaTipoVia;
+	private SondaTraficoVia sondaTraficoVia;
+	private SondaAtencionConductor sondaAtencionConductor;
+	private SondaAsientoConductorOcupado sondaAsientoConductor;
+	private SondaAsientoCopilotoOcupado sondaAsientoCopiloto;
+	private SondaNivelAutonomia sondaNivelAutonomia;
+	private SondaDeteccionManosVolante sondaManosVolante;
+	private SondaFalloCriticoSistema sondaFalloCritico;
+
 	static BundleContext getContext() {
 		return context;
 	}
 
+	@Override
 	public void start(BundleContext bundleContext) throws Exception {
 		Activator.context = bundleContext;
-		
-		BasicMAPEKLiteLoopHelper.BUNDLECONTEXT = bundleContext;
-		BasicMAPEKLiteLoopHelper.REFERENCE_MODEL = "AutonomousCar"; //System.getProperty("model", "default-model");
 
-		// ... adding the initial system configuration
-		IComponentsSystemConfiguration theInitialSystemConfiguration = 
-				SystemConfigurationHelper.createSystemConfiguration("InititalConfiguration");
-		SystemConfigurationHelper.addComponent(theInitialSystemConfiguration, "device.RoadSensor", "1.0.0");
-		BasicMAPEKLiteLoopHelper.INITIAL_SYSTEMCONFIGURATION = theInitialSystemConfiguration;
+		BasicMAPEKLiteLoopHelper.BUNDLECONTEXT = bundleContext;
+		BasicMAPEKLiteLoopHelper.REFERENCE_MODEL = "AutonomousCar";
+
+		// Configuración inicial del sistema gestionado: sólo L0_ManualDriving
+		IComponentsSystemConfiguration initial = SystemConfigurationHelper
+				.createSystemConfiguration("InitialConfiguration");
+		SystemConfigurationHelper.addComponent(initial, ConfiguracionHelper.DRV_L0_MANUAL, ConfiguracionHelper.V);
+		BasicMAPEKLiteLoopHelper.INITIAL_SYSTEMCONFIGURATION = initial;
 
 		BasicMAPEKLiteLoopHelper.MODELSREPOSITORY_FOLDER = System.getProperty("modelsrepository.folder");
 		BasicMAPEKLiteLoopHelper.ADAPTATIONREPORTS_FOLDER = System.getProperty("adaptationreports.folder");
-		// STARTING THE MAPE-K LOOP
-		
+
+		// Arrancamos el bucle MAPE-K
 		BasicMAPEKLiteLoopHelper.startLoopModules();
 
-		
-		
-		BasicMAPEKLiteLoopHelper.addInitialSelfConfigurationCapabilities(createInitialSystemConfiguration());
-		
-		
-		
-		// ADAPTATION PROPERTIES
-		IKnowledgeProperty kp_Modo = BasicMAPEKLiteLoopHelper.createKnowledgeProperty("Modo");
+		// Auto-configuración inicial: dejar L0_ManualDriving como única
+		// configuración tras el arranque del bucle.
+		BasicMAPEKLiteLoopHelper.addInitialSelfConfigurationCapabilities(createInitialSelfConfiguration());
 
-		// ADAPTATION RULES
- 		IAdaptiveReadyComponent theIluminacionConfortAdaptationRuleARC = BasicMAPEKLiteLoopHelper.deployAdaptationRule(new IluminacionConfortAdaptationRule(bundleContext));		
- 		
-		// MONITORS
-		IAdaptiveReadyComponent theModoMonitorARC = BasicMAPEKLiteLoopHelper.deployMonitor(new MonitorModo(bundleContext));		
+		// ===== KNOWLEDGE PROPERTIES =====
+		// Todas las KPs se crean CON VALOR INICIAL. Si una KP queda con
+		// getValue()==null, getKnowledgeProperty(...) en otras consultas
+		// puede bloquearse en el módulo Knowledge de Tatami.
+		setIfPresent(getOrCreateKP("modo-conduccion"), "L0_M");
+		setIfPresent(getOrCreateKP("nivel-autonomia"), Integer.valueOf(0));
+		setIfPresent(getOrCreateKP("tipo-via"), "Carretera");
+		setIfPresent(getOrCreateKP("trafico-via"), "Fluido");
+		setIfPresent(getOrCreateKP("atencion-conductor"), "Atento");
+		setIfPresent(getOrCreateKP("asiento-conductor-ocupado"), Boolean.FALSE);
+		setIfPresent(getOrCreateKP("asiento-copiloto-ocupado"), Boolean.FALSE);
+		setIfPresent(getOrCreateKP("deteccion-manos-volante"), Boolean.FALSE);
+		setIfPresent(getOrCreateKP("fallo-critico-sistema"), Boolean.FALSE);
 
-		// PROBES
-		IAdaptiveReadyComponent theModoProbeARC = BasicMAPEKLiteLoopHelper.deployProbe(new SondaModo(bundleContext), theModoMonitorARC);
+		// ===== MONITORES =====
+		IAdaptiveReadyComponent arcMonitorModo = BasicMAPEKLiteLoopHelper
+				.deployMonitor(new MonitorModoConduccion(bundleContext));
+		IAdaptiveReadyComponent arcMonitorTipoVia = BasicMAPEKLiteLoopHelper
+				.deployMonitor(new MonitorTipoVia(bundleContext));
+		IAdaptiveReadyComponent arcMonitorTrafico = BasicMAPEKLiteLoopHelper
+				.deployMonitor(new MonitorTraficoVia(bundleContext));
+		IAdaptiveReadyComponent arcMonitorAtencion = BasicMAPEKLiteLoopHelper
+				.deployMonitor(new MonitorAtencionConductor(bundleContext));
+		IAdaptiveReadyComponent arcMonitorAsientoCond = BasicMAPEKLiteLoopHelper
+				.deployMonitor(new MonitorAsientoConductorOcupado(bundleContext));
+		IAdaptiveReadyComponent arcMonitorAsientoCop = BasicMAPEKLiteLoopHelper
+				.deployMonitor(new MonitorAsientoCopilotoOcupado(bundleContext));
+		IAdaptiveReadyComponent arcMonitorNivelAutonomia = BasicMAPEKLiteLoopHelper
+				.deployMonitor(new MonitorNivelAutonomia(bundleContext));
+		IAdaptiveReadyComponent arcMonitorManos = BasicMAPEKLiteLoopHelper
+				.deployMonitor(new MonitorDeteccionManosVolante(bundleContext));
+		IAdaptiveReadyComponent arcMonitorFalloCritico = BasicMAPEKLiteLoopHelper
+				.deployMonitor(new MonitorFalloCriticoSistema(bundleContext));
 
-		//
+		// ===== SONDAS =====
+		this.sondaModoConduccion = new SondaModoConduccion(bundleContext);
+		BasicMAPEKLiteLoopHelper.deployProbe(this.sondaModoConduccion, arcMonitorModo);
+
+		this.sondaTipoVia = new SondaTipoVia(bundleContext);
+		BasicMAPEKLiteLoopHelper.deployProbe(this.sondaTipoVia, arcMonitorTipoVia);
+
+		this.sondaTraficoVia = new SondaTraficoVia(bundleContext);
+		BasicMAPEKLiteLoopHelper.deployProbe(this.sondaTraficoVia, arcMonitorTrafico);
+
+		this.sondaAtencionConductor = new SondaAtencionConductor(bundleContext);
+		BasicMAPEKLiteLoopHelper.deployProbe(this.sondaAtencionConductor, arcMonitorAtencion);
+
+		this.sondaAsientoConductor = new SondaAsientoConductorOcupado(bundleContext);
+		BasicMAPEKLiteLoopHelper.deployProbe(this.sondaAsientoConductor, arcMonitorAsientoCond);
+
+		this.sondaAsientoCopiloto = new SondaAsientoCopilotoOcupado(bundleContext);
+		BasicMAPEKLiteLoopHelper.deployProbe(this.sondaAsientoCopiloto, arcMonitorAsientoCop);
+
+		this.sondaNivelAutonomia = new SondaNivelAutonomia(bundleContext);
+		BasicMAPEKLiteLoopHelper.deployProbe(this.sondaNivelAutonomia, arcMonitorNivelAutonomia);
+
+		this.sondaManosVolante = new SondaDeteccionManosVolante(bundleContext);
+		BasicMAPEKLiteLoopHelper.deployProbe(this.sondaManosVolante, arcMonitorManos);
+
+		this.sondaFalloCritico = new SondaFalloCriticoSistema(bundleContext);
+		BasicMAPEKLiteLoopHelper.deployProbe(this.sondaFalloCritico, arcMonitorFalloCritico);
+
+		// ===== REGLAS DE ADAPTACIÓN =====
+		BasicMAPEKLiteLoopHelper.deployAdaptationRule(new ReglaEnCarreteraEstandar(bundleContext));
+		BasicMAPEKLiteLoopHelper.deployAdaptationRule(new ReglaActivarTipoViaAtasco(bundleContext));
+		BasicMAPEKLiteLoopHelper.deployAdaptationRule(new ReglaActivarTipoViaCiudad(bundleContext));
+		BasicMAPEKLiteLoopHelper.deployAdaptationRule(new ReglaActivarEstadoViaAutopista(bundleContext));
+		BasicMAPEKLiteLoopHelper.deployAdaptationRule(new ReglaActivarEstadoViaCiudad(bundleContext));
+		BasicMAPEKLiteLoopHelper.deployAdaptationRule(new ReglaActivarEstadoViaAutovia(bundleContext));
+		BasicMAPEKLiteLoopHelper.deployAdaptationRule(new ReglaActivarSensorEnFallo(bundleContext));
+		BasicMAPEKLiteLoopHelper.deployAdaptationRule(new ReglaActivarFallbackPlan(bundleContext));
+		BasicMAPEKLiteLoopHelper.deployAdaptationRule(new ReglaPriorizacionSensores(bundleContext));
+		BasicMAPEKLiteLoopHelper.deployAdaptationRule(new ReglaAutoCuracionFalloCritico(bundleContext));
+		BasicMAPEKLiteLoopHelper.deployAdaptationRule(new ReglaAtencionConductor(bundleContext));
+		BasicMAPEKLiteLoopHelper.deployAdaptationRule(new ReglaManosVolante(bundleContext));
+		BasicMAPEKLiteLoopHelper.deployAdaptationRule(new ReglaUbicacionConductor(bundleContext));
+		BasicMAPEKLiteLoopHelper.deployAdaptationRule(new ReglaArranqueHighwayChauffer(bundleContext));
+
+		// Arrancamos los hilos de medición de las sondas
+		this.sondaModoConduccion.startMonitoring();
+		this.sondaTipoVia.startMonitoring();
+		this.sondaTraficoVia.startMonitoring();
+		this.sondaAtencionConductor.startMonitoring();
+		this.sondaAsientoConductor.startMonitoring();
+		this.sondaAsientoCopiloto.startMonitoring();
+		this.sondaNivelAutonomia.startMonitoring();
+		this.sondaManosVolante.startMonitoring();
+		this.sondaFalloCritico.startMonitoring();
 	}
 
+	@Override
 	public void stop(BundleContext bundleContext) throws Exception {
+		if (this.sondaModoConduccion != null)
+			this.sondaModoConduccion.stopMonitoring();
+		if (this.sondaTipoVia != null)
+			this.sondaTipoVia.stopMonitoring();
+		if (this.sondaTraficoVia != null)
+			this.sondaTraficoVia.stopMonitoring();
+		if (this.sondaAtencionConductor != null)
+			this.sondaAtencionConductor.stopMonitoring();
+		if (this.sondaAsientoConductor != null)
+			this.sondaAsientoConductor.stopMonitoring();
+		if (this.sondaAsientoCopiloto != null)
+			this.sondaAsientoCopiloto.stopMonitoring();
+		if (this.sondaNivelAutonomia != null)
+			this.sondaNivelAutonomia.stopMonitoring();
+		if (this.sondaManosVolante != null)
+			this.sondaManosVolante.stopMonitoring();
+		if (this.sondaFalloCritico != null)
+			this.sondaFalloCritico.stopMonitoring();
+
 		Activator.context = null;
 	}
 
-	
-	protected IRuleComponentsSystemConfiguration createInitialSystemConfiguration() {
-		
-		IRuleComponentsSystemConfiguration theInitialSystemConfiguration = SystemConfigurationHelper.createPartialSystemConfiguration("InitialConfiguration_" + ITimeStamped.getCurrentTimeStamp());
-			
-		//
-		// ... adding and removing components examples ...
-		// SystemConfigurationHelper.componentToAdd or SystemConfigurationHelper.componentToRemove
-		//		systemconfiguration :  una IRuleComponentsSystemConfiguration donde se añadirán o eliminarán los componentes
-		//		component-id		:  nombre del compopnente a añadir o quitar
-		//		component-version	:  versión del componente
-		
-		// Ejemplo 1: Añadimos los componentes "device.RoadSensor" y "device.Engine", y eliminamos el componente "device.Steering" ...
-		SystemConfigurationHelper.componentToAdd(theInitialSystemConfiguration, "device.RoadSensor", "1.0.0");
-		SystemConfigurationHelper.componentToAdd(theInitialSystemConfiguration, "device.Engine", "1.0.0");
-		SystemConfigurationHelper.componentToRemove(theInitialSystemConfiguration, "device.Steering", "1.0.0");
-		
-		// Ejemplo 2: ... y añadimos el servicio "driving.FallbackPlan.Emergency", que representa al fallback plan de emergencia
-		SystemConfigurationHelper.componentToAdd(theInitialSystemConfiguration, "driving.FallbackPlan.Emergency", "1.0.0");
-		
-		
-		
-		//
-		// ... adding and removing binding examples ...
-		// SystemConfigurationHelper.bindingToAdd or SystemConfigurationHelper.bindingToRemove
-		//		systemconfiguration   :  una IRuleComponentsSystemConfiguration donde se añadirán o eliminarán los componentes
-		//		req-component-id	  :  nombre del componente que requiere la conexión
-		//		req-component-version :  versión del componente que requiere la conexión
-		//		req-component-interfaz:  interfaz requerida del componente
-		//      prov-component-id	  :  nombre del componente que provee la conexión
-		//		prov-component-version:  versión del componente que provee la conexión
-		//		prov-component-interfaz:  interfaz proporcionada del componente
-		
-		// Ejemplo 3: Conectar el componente "driving.FallbackPlan.Emergency" (a través de su interfaz requerida "required_engine")
-		//    con el componente "device.Engine" (a través de su interfaz proporcionada "provided_device")
-		SystemConfigurationHelper.bindingToAdd(theInitialSystemConfiguration, 
-				"driving.FallbackPlan.Emergency", "1.0.0", FallbackPlanARC.REQUIRED_ENGINE,
-				"device.Engine", "1.0.0", EngineARC.PROVIDED_DEVICE);
+	/**
+	 * Devuelve la KnowledgeProperty con el id dado, creándola si no existe. Si
+	 * la creación falla, deja que la excepción se propague para que el error
+	 * sea visible en la consola OSGi (no tragamos errores en silencio).
+	 */
+	private IKnowledgeProperty getOrCreateKP(String id) {
+		IKnowledgeProperty kp = BasicMAPEKLiteLoopHelper.getKnowledgeProperty(id);
+		if (kp != null)
+			return kp;
+		return BasicMAPEKLiteLoopHelper.createKnowledgeProperty(id);
+	}
 
-		// Ejemplo 4: Desconectar del componente "driving.FallbackPlan.Emergency" (en su interfaz requerida "required_steering")
-		//    del componente "device.Steering" (a través de su interfaz proporcionada "provided_device")
-		SystemConfigurationHelper.bindingToRemove(theInitialSystemConfiguration, 
-				"driving.FallbackPlan.Emergency", "1.0.0", FallbackPlanARC.REQUIRED_STEERING,
-				"device.Steering", "1.0.0", SteeringARC.PROVIDED_DEVICE);
+	private void setIfPresent(IKnowledgeProperty kp, Object value) {
+		if (kp == null || value == null)
+			return;
+		if (kp.getValue() == null || !value.equals(kp.getValue()))
+			kp.setValue(value);
+	}
 
-		
-		//
-		// ... setting parameters examples ...
-		// SystemConfigurationHelper.setParameter
-		//		systemconfiguration   :  una IRuleComponentsSystemConfiguration donde se añadirán el set parameter
-		//		component-id		  :  nombre del componente
-		//		component-version	  :  versión del componente
-		//		parameter-id		  :  nombre del parámetro
-		//		parameter-value		  :  valor del parámetro
-		
-		// Ejemplo 5: Establecer el parámetro "referencespeed" a 100Km/h del servicio de conducción "driving.L3.HighwayChauffer"
-		SystemConfigurationHelper.setParameter(theInitialSystemConfiguration, 
-				"driving.L3.HighwayChauffer", "1.0.0", L3_DrivingServiceARC.PARAMETER_REFERENCESPEED, "100");
-		// * El servicio de conducción "driving.L3.HighwayChauffer" puede no estar activo en este momento, y por tanto
-		//   este 'set parameter' puede que no provoque ningún cambio de manera efectiva.
-		//   Si quisiéramos que el servicio "driving.L3.HighwayChauffer" estuviera activo, deberíamos añadirlo como en el Ejemplo 2
-		// ...
+	protected IRuleComponentsSystemConfiguration createInitialSelfConfiguration() {
+		IRuleComponentsSystemConfiguration cfg = SystemConfigurationHelper
+				.createPartialSystemConfiguration("InitialConfiguration_" + ITimeStamped.getCurrentTimeStamp());
 
-		return theInitialSystemConfiguration;
-		
+		// Configuración inicial: el coche arranca en modo manual (L0).
+		SystemConfigurationHelper.componentToAdd(cfg, ConfiguracionHelper.DRV_L0_MANUAL, ConfiguracionHelper.V);
+
+		return cfg;
 	}
 }
