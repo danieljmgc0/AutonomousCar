@@ -1,0 +1,48 @@
+package autonomouscar.mapek.lite.adaptation.resources;
+
+import org.osgi.framework.BundleContext;
+
+import es.upv.pros.tatami.adaptation.mapek.lite.ARC.structures.systemconfiguration.interfaces.IRuleComponentsSystemConfiguration;
+import es.upv.pros.tatami.adaptation.mapek.lite.artifacts.components.AdaptationRule;
+import es.upv.pros.tatami.adaptation.mapek.lite.artifacts.interfaces.IKnowledgeProperty;
+import es.upv.pros.tatami.adaptation.mapek.lite.exceptions.analyzing.RuleException;
+import es.upv.pros.tatami.adaptation.mapek.lite.helpers.BasicMAPEKLiteLoopHelper;
+import es.upv.pros.tatami.adaptation.mapek.lite.helpers.SystemConfigurationHelper;
+import es.upv.pros.tatami.adaptation.mapek.lite.structures.systemconfiguration.interfaces.IRuleSystemConfiguration;
+import es.upv.pros.tatami.osgi.utils.interfaces.ITimeStamped;
+
+/**
+ * ADS_L3-2: En L3_HighwayChauffer con atasco → activar L3_TrafficJamChauffer.
+ */
+public class ReglaActivarTipoViaAtasco extends AdaptationRule {
+
+	public static String ID = "regla-activar-tipo-via-atasco";
+
+	IKnowledgeProperty kp_modoCond;
+	IKnowledgeProperty kp_trafico;
+
+	public ReglaActivarTipoViaAtasco(BundleContext context) {
+		super(context, ID);
+		this.setListenToKnowledgePropertyChanges("modo-conduccion");
+		this.setListenToKnowledgePropertyChanges("trafico-via");
+		kp_modoCond = BasicMAPEKLiteLoopHelper.getKnowledgeProperty("modo-conduccion");
+		kp_trafico  = BasicMAPEKLiteLoopHelper.getKnowledgeProperty("trafico-via");
+	}
+
+	@Override
+	public boolean checkAffectedByChange(IKnowledgeProperty property) {
+		if (kp_modoCond == null || kp_trafico == null) return false;
+		if (kp_modoCond.getValue() == null || kp_trafico.getValue() == null) return false;
+		return "L3_HighwayChauffer".equals(kp_modoCond.getValue())
+				&& "Atasco".equals(kp_trafico.getValue());
+	}
+
+	@Override
+	public IRuleSystemConfiguration onExecute(IKnowledgeProperty property) throws RuleException {
+		IRuleComponentsSystemConfiguration config = SystemConfigurationHelper
+				.createPartialSystemConfiguration(ID + "_" + ITimeStamped.getCurrentTimeStamp());
+		ConfiguracionHelper.removeL3HighwayChauffer(config);
+		ConfiguracionHelper.addL3TrafficJamChauffer(config);
+		return config;
+	}
+}

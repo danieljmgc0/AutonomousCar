@@ -177,20 +177,26 @@ public class MyCommandProvider {
 	
 	
 	public void knowledge() {
-			
-			IKnowledgeProperty kp_myProp = BasicMAPEKLiteLoopHelper.getKnowledgeProperty("my-prop");
-			
-			String myProp = "UNKNOWN";
-			if ( kp_myProp != null && kp_myProp.getValue() != null )
-				myProp = kp_myProp.getValue().toString();
-					
-			System.out.println("* * * * * * * * * * * * * * * * * * * * * * * *");
-			System.out.println("*  KNOWLEDGE");
-			System.out.println("* * * * * * * * * * * * * * * * * * * * * * * *");
-			System.out.println(String.format("*   my-prop: %s", myProp));
-			// ...
-			System.out.println("* * * * * * * * * * * * * * * * * * * * * * * *");
+		System.out.println("* * * * * * * * * * * * * * * * * * * * * * * *");
+		System.out.println("*  KNOWLEDGE PROPERTIES");
+		System.out.println("* * * * * * * * * * * * * * * * * * * * * * * *");
+		printKP("nivel-autonomia");
+		printKP("modo-conduccion");
+		printKP("tipo-via");
+		printKP("trafico-via");
+		printKP("atencion-conductor");
+		printKP("asiento-conductor-ocupado");
+		printKP("asiento-copiloto-ocupado");
+		printKP("deteccion-manos-volante");
+		printKP("posibilidad-conduccion");
+		printKP("fallo-critico-sistema");
+		System.out.println("* * * * * * * * * * * * * * * * * * * * * * * *");
+	}
 
+	private void printKP(String id) {
+		IKnowledgeProperty kp = BasicMAPEKLiteLoopHelper.getKnowledgeProperty(id);
+		String val = (kp != null && kp.getValue() != null) ? kp.getValue().toString() : "N/A";
+		System.out.println(String.format("*  %-34s: %s", id, val));
 	}
 	
 	
