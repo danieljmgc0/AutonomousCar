@@ -17,8 +17,10 @@ import sua.autonomouscar.infraestructure.driving.ARC.L2_DrivingServiceARC;
 import sua.autonomouscar.interfaces.IIdentifiable;
 
 /**
- * ADS_L3-7 / ADS-1: nivel-autonomia==3 y RightDistanceSensor no disponible.
- * Si LIDAR disponible → sustitución. Sino → quitar L3 (fallo crítico).
+ * ADS_L3-7 / ADS-1: en L3, si RightDistanceSensor no está disponible.
+ * Si LIDAR disponible → sustitución del binding. Sino → quitar L3 activo.
+ *
+ * Dispara cuando cambia 'sensor-derecho-disponible' (false = fallo) o 'nivel-autonomia'.
  */
 public class ReglaActivarSensorEnFallo extends AdaptationRule {
 
@@ -27,23 +29,25 @@ public class ReglaActivarSensorEnFallo extends AdaptationRule {
 	private BundleContext context;
 	IKnowledgeProperty kp_nivel;
 	IKnowledgeProperty kp_modo;
+	IKnowledgeProperty kp_sensorDerecho;
 
 	public ReglaActivarSensorEnFallo(BundleContext context) {
 		super(context, ID);
 		this.context = context;
 		this.setListenToKnowledgePropertyChanges("nivel-autonomia");
-		kp_nivel = BasicMAPEKLiteLoopHelper.getKnowledgeProperty("nivel-autonomia");
-		kp_modo  = BasicMAPEKLiteLoopHelper.getKnowledgeProperty("modo-conduccion");
+		this.setListenToKnowledgePropertyChanges("sensor-derecho-disponible");
+		kp_nivel         = BasicMAPEKLiteLoopHelper.getKnowledgeProperty("nivel-autonomia");
+		kp_modo          = BasicMAPEKLiteLoopHelper.getKnowledgeProperty("modo-conduccion");
+		kp_sensorDerecho = BasicMAPEKLiteLoopHelper.getKnowledgeProperty("sensor-derecho-disponible");
 	}
 
 	@Override
 	public boolean checkAffectedByChange(IKnowledgeProperty property) {
 		if (kp_nivel == null || kp_nivel.getValue() == null) return false;
 		if ((Integer) kp_nivel.getValue() != 3) return false;
-		// Verificar que RightDistanceSensor no está disponible
-		IDistanceSensor rds = OSGiUtils.getService(context, IDistanceSensor.class,
-				"(" + IIdentifiable.ID + "=RightDistanceSensor)");
-		return rds == null;
+		// La regla dispara cuando el sensor derecho NO está disponible
+		if (kp_sensorDerecho == null || kp_sensorDerecho.getValue() == null) return false;
+		return Boolean.FALSE.equals(kp_sensorDerecho.getValue());
 	}
 
 	@Override
@@ -51,25 +55,35 @@ public class ReglaActivarSensorEnFallo extends AdaptationRule {
 		IRuleComponentsSystemConfiguration config = SystemConfigurationHelper
 				.createPartialSystemConfiguration(ID + "_" + ITimeStamped.getCurrentTimeStamp());
 
-		// Comprobar si el LIDAR está disponible
+		// ID del bundle del servicio L3 activo (necesario para bindingToRemove/Add)
+		String modoCond = (kp_modo != null) ? (String) kp_modo.getValue() : null;
+		String bundleL3 = modoCond2BundleId(modoCond);
+
+		// Comprobar si el LIDAR puede sustituir al sensor derecho
 		IDistanceSensor lidarRight = OSGiUtils.getService(context, IDistanceSensor.class,
 				"(" + IIdentifiable.ID + "=LIDAR-RightDistanceSensor)");
 
-		String dsActivo = kp_modo != null ? (String) kp_modo.getValue() : null;
-
-		if (lidarRight != null && dsActivo != null) {
-			// Añadir LIDAR y redirigir el binding de RightDistanceSensor
+		if (lidarRight != null && bundleL3 != null) {
+			// Rama A: sustituir RightDistanceSensor por LIDAR en el servicio L3 activo
 			SystemConfigurationHelper.componentToAdd(config, "device.LIDAR.RightDistanceSensor", "1.0.0");
 			SystemConfigurationHelper.bindingToRemove(config,
-					dsActivo, "1.0.0", L2_DrivingServiceARC.REQUIRED_RIGHTDISTANCESENSOR,
+					bundleL3, "1.0.0", L2_DrivingServiceARC.REQUIRED_RIGHTDISTANCESENSOR,
 					"device.RightDistanceSensor", "1.0.0", DistanceSensorARC.PROVIDED_SENSOR);
 			SystemConfigurationHelper.bindingToAdd(config,
-					dsActivo, "1.0.0", L2_DrivingServiceARC.REQUIRED_RIGHTDISTANCESENSOR,
+					bundleL3, "1.0.0", L2_DrivingServiceARC.REQUIRED_RIGHTDISTANCESENSOR,
 					"device.LIDAR.RightDistanceSensor", "1.0.0", DistanceSensorARC.PROVIDED_SENSOR);
-		} else if (dsActivo != null) {
-			// Sin redundancia → quitar el servicio L3 activo (el monitor lo detectará)
-			SystemConfigurationHelper.componentToRemove(config, dsActivo, "1.0.0");
+		} else if (bundleL3 != null) {
+			// Rama B: sin redundancia → desactivar el servicio L3 (TakeOver / FallbackPlan)
+			SystemConfigurationHelper.componentToRemove(config, bundleL3, "1.0.0");
 		}
 		return config;
+	}
+
+	/** Convierte el valor de modo-conduccion (service ID) al bundle ID del ARC correspondiente. */
+	private String modoCond2BundleId(String modoCond) {
+		if ("L3_HighwayChauffer".equals(modoCond))    return "driving.L3.HighwayChauffer";
+		if ("L3_CityChauffer".equals(modoCond))       return "driving.L3.CityChauffer";
+		if ("L3_TrafficJamChauffer".equals(modoCond)) return "driving.L3.TrafficJamChauffer";
+		return null;
 	}
 }

@@ -178,7 +178,15 @@ public class Activator implements BundleActivator {
 					//		n
 					//
 					"next",
-					"n"
+					"n",
+
+					// notification : muestra los mecanismos de interacción activos
+					// Uso: notification
+					"notification",
+
+					// notify : lanza una notificación de prueba por todos los mecanismos activos
+					// Uso: notify <mensaje>
+					"notify"
 		});
 		
 		this.commandProvReg = context.registerService(MyCommandProvider.class.getName(),

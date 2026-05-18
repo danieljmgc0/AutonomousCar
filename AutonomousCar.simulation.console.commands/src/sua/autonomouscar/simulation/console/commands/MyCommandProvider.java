@@ -23,6 +23,7 @@ import sua.autonomouscar.driving.interfaces.IL3_DrivingService;
 import sua.autonomouscar.infraestructure.OSGiUtils;
 import sua.autonomouscar.infraestructure.devices.DistanceSensor;
 import sua.autonomouscar.infraestructure.driving.DrivingService;
+import sua.autonomouscar.interaction.interfaces.INotificationService;
 import sua.autonomouscar.interfaces.EFaceStatus;
 import sua.autonomouscar.interfaces.ERoadStatus;
 import sua.autonomouscar.interfaces.ERoadType;
@@ -350,6 +351,43 @@ public class MyCommandProvider {
 	
 	public void n() {
 		this.next();
+	}
+
+	/**
+	 * Muestra los mecanismos de interacción actualmente activos en el NotificationService.
+	 * Uso: notification
+	 */
+	public void notification() {
+		INotificationService ns = OSGiUtils.getService(context, INotificationService.class);
+		System.out.println("~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~");
+		System.out.println("~  NOTIFICATION SERVICE");
+		System.out.println("~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~");
+		if (ns == null) {
+			System.out.println("~  <NotificationService no desplegado>");
+		} else {
+			java.util.List<String> mechs = ns.getInteractionMechanisms();
+			if (mechs == null || mechs.isEmpty()) {
+				System.out.println("~  <Sin mecanismos activos>");
+			} else {
+				for (String m : mechs)
+					System.out.println("~  [ACTIVO] " + m);
+			}
+		}
+		System.out.println("~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~");
+	}
+
+	/**
+	 * Lanza una notificación de prueba a través de todos los mecanismos activos.
+	 * Uso: notify <mensaje>
+	 */
+	public void notify(String message) {
+		INotificationService ns = OSGiUtils.getService(context, INotificationService.class);
+		if (ns == null) {
+			System.out.println("[notify] NotificationService no disponible.");
+			return;
+		}
+		System.out.println("[notify] Enviando: \"" + message + "\"");
+		ns.notify(message);
 	}
 
 }

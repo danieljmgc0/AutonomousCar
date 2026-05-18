@@ -22,6 +22,7 @@ import autonomouscar.mapek.lite.adaptation.resources.ReglaActivarTipoViaCiudad;
 import autonomouscar.mapek.lite.adaptation.resources.ReglaCambioAtencionConductor;
 import autonomouscar.mapek.lite.adaptation.resources.ReglaCambioManosVolante;
 import autonomouscar.mapek.lite.adaptation.resources.ReglaCambioUbicacionConductor;
+import autonomouscar.mapek.lite.adaptation.resources.ReglaActivarL3Autopista;
 import autonomouscar.mapek.lite.adaptation.resources.ReglaEnCarreteraEstandar;
 import autonomouscar.mapek.lite.adaptation.resources.ReglaFalloCritico;
 import autonomouscar.mapek.lite.adaptation.resources.SondaAsientoConductor;
@@ -31,6 +32,8 @@ import autonomouscar.mapek.lite.adaptation.resources.SondaDeteccionManosVolante;
 import autonomouscar.mapek.lite.adaptation.resources.SondaFalloCriticoSistema;
 import autonomouscar.mapek.lite.adaptation.resources.SondaModoConduccion;
 import autonomouscar.mapek.lite.adaptation.resources.SondaPosibilidadConduccion;
+import autonomouscar.mapek.lite.adaptation.resources.SondaSensorDerechoDisponible;
+import autonomouscar.mapek.lite.adaptation.resources.MonitorSensorDerechoDisponible;
 import autonomouscar.mapek.lite.adaptation.resources.SondaTipoVia;
 import autonomouscar.mapek.lite.adaptation.resources.SondaTraficoVia;
 import autonomouscar.mapek.lite.adaptation.resources.ConfiguracionHelper;
@@ -87,7 +90,7 @@ public class Activator implements BundleActivator {
 		BasicMAPEKLiteLoopHelper.ADAPTATIONREPORTS_FOLDER = System.getProperty("adaptationreports.folder");
 
 		BasicMAPEKLiteLoopHelper.startLoopModules();
-		BasicMAPEKLiteLoopHelper.addInitialSelfConfigurationCapabilities(createInitialSystemConfiguration());
+		BasicMAPEKLiteLoopHelper.addInitialSelfConfigurationCapabilities((IRuleComponentsSystemConfiguration) createInitialSystemConfiguration());
 
 		// ---- KNOWLEDGE PROPERTIES ----
 		BasicMAPEKLiteLoopHelper.createKnowledgeProperty("nivel-autonomia");
@@ -100,8 +103,10 @@ public class Activator implements BundleActivator {
 		BasicMAPEKLiteLoopHelper.createKnowledgeProperty("deteccion-manos-volante");
 		BasicMAPEKLiteLoopHelper.createKnowledgeProperty("posibilidad-conduccion");
 		BasicMAPEKLiteLoopHelper.createKnowledgeProperty("fallo-critico-sistema");
+		BasicMAPEKLiteLoopHelper.createKnowledgeProperty("sensor-derecho-disponible");
 
 		// ---- REGLAS ----
+		BasicMAPEKLiteLoopHelper.deployAdaptationRule(new ReglaActivarL3Autopista(bundleContext));
 		BasicMAPEKLiteLoopHelper.deployAdaptationRule(new ReglaEnCarreteraEstandar(bundleContext));
 		BasicMAPEKLiteLoopHelper.deployAdaptationRule(new ReglaActivarTipoViaAtasco(bundleContext));
 		BasicMAPEKLiteLoopHelper.deployAdaptationRule(new ReglaActivarTipoViaCiudad(bundleContext));
@@ -142,6 +147,9 @@ public class Activator implements BundleActivator {
 
 		deployProbeMonitor(bundleContext, new SondaFalloCriticoSistema(bundleContext),
 				BasicMAPEKLiteLoopHelper.deployMonitor(new MonitorFalloCriticoSistema(bundleContext)));
+
+		deployProbeMonitor(bundleContext, new SondaSensorDerechoDisponible(bundleContext),
+				BasicMAPEKLiteLoopHelper.deployMonitor(new MonitorSensorDerechoDisponible(bundleContext)));
 	}
 
 	/** Despliega la sonda y la registra como ISimulationElement para que sea invocada en cada 'next'. */
@@ -156,13 +164,17 @@ public class Activator implements BundleActivator {
 
 	/**
 	 * Configuración inicial que se aplica al ejecutar 'initialize' en la consola OSGi.
-	 * Despliega el escenario de prueba: vehículo en L3_HighwayChauffer en autopista.
+	 * Despliega todos los sensores necesarios manteniendo L0_ManualDriving activo.
+	 * La transición a L3 la gestionan las reglas de adaptación.
 	 */
 	protected IRuleSystemConfiguration createInitialSystemConfiguration() {
 		IRuleComponentsSystemConfiguration c = SystemConfigurationHelper
 				.createPartialSystemConfiguration("InitialScenario_" + ITimeStamped.getCurrentTimeStamp());
 
-		// --- Sensores de distancia ---
+		// --- Velocímetro (usado directamente por los servicios de conducción) ---
+		SystemConfigurationHelper.componentToAdd(c, "device.Speedometer", "1.0.0");
+
+		// --- Sensores de distancia y actuadores ---
 		SystemConfigurationHelper.componentToAdd(c, "device.Engine", "1.0.0");
 		SystemConfigurationHelper.componentToAdd(c, "device.Steering", "1.0.0");
 		SystemConfigurationHelper.componentToAdd(c, "device.FrontDistanceSensor", "1.0.0");
@@ -196,17 +208,12 @@ public class Activator implements BundleActivator {
 		// --- Servicio de notificación ---
 		SystemConfigurationHelper.componentToAdd(c, "interaction.NotificationService", "1.0.0");
 
-		// --- Fallback Plans ---
+		// --- Fallback Plans (disponibles para cuando L3 esté activo) ---
 		ConfiguracionHelper.addFallbackPlanEmergency(c);
 		ConfiguracionHelper.addFallbackPlanParkInShoulder(c);
 
-		// --- Servicio de conducción L3_HighwayChauffer ---
-		ConfiguracionHelper.addL3HighwayChauffer(c);
-
-		// Sobreescribir el fallback plan del L3 con el preferente (ParkInShoulder)
-		SystemConfigurationHelper.bindingToAdd(c,
-				"driving.L3.HighwayChauffer", "1.0.0", L3_DrivingServiceARC.REQUIRED_FALLBACKPLAN,
-				"driving.FallbackPlan.ParkInTheRoadShoulder", "1.0.0", DrivingServiceARC.PROVIDED_DRIVINGSERVICE);
+		// L0_ManualDriving permanece activo; la regla ReglaActivarL3Autopista
+		// transitará a L3_HighwayChauffer cuando tipo-via=Autopista y trafico=Fluido.
 
 		return c;
 	}

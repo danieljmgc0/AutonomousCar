@@ -24,13 +24,13 @@ public class MonitorModoConduccion extends Monitor {
 			String modo;
 			if (serviceId.startsWith("L3_")) {
 				nivel = 3;
-				modo  = serviceId;
+				modo  = serviceId;          // e.g. "L3_HighwayChauffer"
 			} else if (serviceId.startsWith("L2_")) {
 				nivel = 2;
-				modo  = "L0_M";
+				modo  = serviceId;          // e.g. "L2_AdaptiveCruiseControl"
 			} else if (serviceId.startsWith("L1_")) {
 				nivel = 1;
-				modo  = "L0_M";
+				modo  = serviceId;          // e.g. "L1_AssistedDriving"
 			} else {
 				nivel = 0;
 				modo  = "L0_M";
