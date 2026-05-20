@@ -47,17 +47,32 @@ public class ReglaCambioManosVolante extends AdaptationRule {
 		IRuleComponentsSystemConfiguration config = SystemConfigurationHelper
 				.createPartialSystemConfiguration(ID + "_" + ITimeStamped.getCurrentTimeStamp());
 
-		ConfiguracionHelper.removeAllMechanisms(config);
-
 		boolean manosEnVolante = Boolean.TRUE.equals(kp_manos.getValue());
 		boolean asientoConductor = !Boolean.FALSE.equals(
 				kp_asiento != null ? kp_asiento.getValue() : Boolean.TRUE);
 
 		if (manosEnVolante) {
-			// Solo vibración en el volante
+			// Con manos en volante: solo vibración en el volante
+			// REMOVE: mecanismos que NO se usan en este estado
+			ConfiguracionHelper.removeMechanism(config, ConfiguracionHelper.MECH_SEAT_DRIVER);
+			ConfiguracionHelper.removeMechanism(config, ConfiguracionHelper.MECH_SEAT_COPILOT);
+			ConfiguracionHelper.removeMechanism(config, ConfiguracionHelper.MECH_SPEAKER_BEEP);
+			ConfiguracionHelper.removeMechanism(config, ConfiguracionHelper.MECH_SPEAKER_SOUND);
+			ConfiguracionHelper.removeMechanism(config, ConfiguracionHelper.MECH_DRIVER_ICON);
+			ConfiguracionHelper.removeMechanism(config, ConfiguracionHelper.MECH_DRIVER_TEXT);
+			ConfiguracionHelper.removeMechanism(config, ConfiguracionHelper.MECH_DASHBOARD_ICON);
+			ConfiguracionHelper.removeMechanism(config, ConfiguracionHelper.MECH_DASHBOARD_TEXT);
+			ConfiguracionHelper.removeMechanism(config, ConfiguracionHelper.MECH_DASHBOARD_ICON2);
+			// ADD
 			ConfiguracionHelper.addMechanism(config, ConfiguracionHelper.MECH_STEERING_WHEEL);
+			System.out.println("[INTERACT-2 Manos en volante] Está vibrando el volante.");
+
 		} else if (asientoConductor) {
-			// Sin vibración en volante, con vibración asiento
+			// Sin manos en volante, conductor en asiento: sin vibración volante, con vibración asiento
+			// REMOVE
+			ConfiguracionHelper.removeMechanism(config, ConfiguracionHelper.MECH_STEERING_WHEEL);
+			ConfiguracionHelper.removeMechanism(config, ConfiguracionHelper.MECH_DASHBOARD_ICON2);
+			// ADD
 			ConfiguracionHelper.addMechanism(config, ConfiguracionHelper.MECH_DASHBOARD_TEXT);
 			ConfiguracionHelper.addMechanism(config, ConfiguracionHelper.MECH_DRIVER_ICON);
 			ConfiguracionHelper.addMechanism(config, ConfiguracionHelper.MECH_SPEAKER_SOUND);
@@ -66,8 +81,17 @@ public class ReglaCambioManosVolante extends AdaptationRule {
 			ConfiguracionHelper.addMechanism(config, ConfiguracionHelper.MECH_DASHBOARD_ICON);
 			ConfiguracionHelper.addMechanism(config, ConfiguracionHelper.MECH_SEAT_DRIVER);
 			ConfiguracionHelper.addMechanism(config, ConfiguracionHelper.MECH_SEAT_COPILOT);
+			System.out.println("[INTERACT-2 Sin manos, conductor en asiento] Se ha encendido la pantalla central y del conductor.");
+			System.out.println("[INTERACT-2 Sin manos, conductor en asiento] Suenan los altavoces y el beep.");
+			System.out.println("[INTERACT-2 Sin manos, conductor en asiento] Están vibrando los asientos del conductor y copiloto.");
+
 		} else {
-			// Sin volante ni asiento conductor
+			// Sin manos en volante, conductor fuera del asiento: sin vibración volante ni asiento conductor
+			// REMOVE
+			ConfiguracionHelper.removeMechanism(config, ConfiguracionHelper.MECH_STEERING_WHEEL);
+			ConfiguracionHelper.removeMechanism(config, ConfiguracionHelper.MECH_SEAT_DRIVER);
+			ConfiguracionHelper.removeMechanism(config, ConfiguracionHelper.MECH_DASHBOARD_ICON2);
+			// ADD
 			ConfiguracionHelper.addMechanism(config, ConfiguracionHelper.MECH_DASHBOARD_TEXT);
 			ConfiguracionHelper.addMechanism(config, ConfiguracionHelper.MECH_DRIVER_ICON);
 			ConfiguracionHelper.addMechanism(config, ConfiguracionHelper.MECH_SPEAKER_SOUND);
@@ -75,6 +99,9 @@ public class ReglaCambioManosVolante extends AdaptationRule {
 			ConfiguracionHelper.addMechanism(config, ConfiguracionHelper.MECH_DRIVER_TEXT);
 			ConfiguracionHelper.addMechanism(config, ConfiguracionHelper.MECH_DASHBOARD_ICON);
 			ConfiguracionHelper.addMechanism(config, ConfiguracionHelper.MECH_SEAT_COPILOT);
+			System.out.println("[INTERACT-2 Sin manos, sin asiento conductor] Se ha encendido la pantalla central y del conductor.");
+			System.out.println("[INTERACT-2 Sin manos, sin asiento conductor] Suenan los altavoces y el beep.");
+			System.out.println("[INTERACT-2 Sin manos, sin asiento conductor] Está vibrando el asiento del copiloto.");
 		}
 		return config;
 	}

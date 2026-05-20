@@ -44,30 +44,60 @@ public class ReglaCambioAtencionConductor extends AdaptationRule {
 		IRuleComponentsSystemConfiguration config = SystemConfigurationHelper
 				.createPartialSystemConfiguration(ID + "_" + ITimeStamped.getCurrentTimeStamp());
 
-		// Limpiar todos los mecanismos actuales
-		ConfiguracionHelper.removeAllMechanisms(config);
-
 		String atencion = (String) kp_atencion.getValue();
 
 		if ("Atento".equals(atencion)) {
 			// Poco molestos: vibración volante + texto + icono en consola conductor
+			// REMOVE: mecanismos que NO se usan en este estado
+			ConfiguracionHelper.removeMechanism(config, ConfiguracionHelper.MECH_SEAT_DRIVER);
+			ConfiguracionHelper.removeMechanism(config, ConfiguracionHelper.MECH_SEAT_COPILOT);
+			ConfiguracionHelper.removeMechanism(config, ConfiguracionHelper.MECH_SPEAKER_BEEP);
+			ConfiguracionHelper.removeMechanism(config, ConfiguracionHelper.MECH_SPEAKER_SOUND);
+			ConfiguracionHelper.removeMechanism(config, ConfiguracionHelper.MECH_DASHBOARD_ICON);
+			ConfiguracionHelper.removeMechanism(config, ConfiguracionHelper.MECH_DASHBOARD_TEXT);
+			ConfiguracionHelper.removeMechanism(config, ConfiguracionHelper.MECH_DASHBOARD_ICON2);
+			// ADD: mecanismos activos para este estado
 			ConfiguracionHelper.addMechanism(config, ConfiguracionHelper.MECH_STEERING_WHEEL);
 			ConfiguracionHelper.addMechanism(config, ConfiguracionHelper.MECH_DRIVER_TEXT);
 			ConfiguracionHelper.addMechanism(config, ConfiguracionHelper.MECH_DRIVER_ICON);
+			System.out.println("[INTERACT-1 Atento] Está vibrando el volante.");
+			System.out.println("[INTERACT-1 Atento] Se ha encendido la pantalla del conductor (texto e icono).");
 
 		} else if ("Dormido".equals(atencion)) {
 			// Muy molestos: vibración volante + vibración asiento + altavoz sonido
+			// REMOVE
+			ConfiguracionHelper.removeMechanism(config, ConfiguracionHelper.MECH_SEAT_COPILOT);
+			ConfiguracionHelper.removeMechanism(config, ConfiguracionHelper.MECH_SPEAKER_BEEP);
+			ConfiguracionHelper.removeMechanism(config, ConfiguracionHelper.MECH_DRIVER_ICON);
+			ConfiguracionHelper.removeMechanism(config, ConfiguracionHelper.MECH_DRIVER_TEXT);
+			ConfiguracionHelper.removeMechanism(config, ConfiguracionHelper.MECH_DASHBOARD_ICON);
+			ConfiguracionHelper.removeMechanism(config, ConfiguracionHelper.MECH_DASHBOARD_TEXT);
+			ConfiguracionHelper.removeMechanism(config, ConfiguracionHelper.MECH_DASHBOARD_ICON2);
+			// ADD
 			ConfiguracionHelper.addMechanism(config, ConfiguracionHelper.MECH_STEERING_WHEEL);
 			ConfiguracionHelper.addMechanism(config, ConfiguracionHelper.MECH_SEAT_DRIVER);
 			ConfiguracionHelper.addMechanism(config, ConfiguracionHelper.MECH_SPEAKER_SOUND);
+			System.out.println("[INTERACT-1 Dormido] Está vibrando el volante.");
+			System.out.println("[INTERACT-1 Dormido] Está vibrando el asiento del conductor.");
+			System.out.println("[INTERACT-1 Dormido] Suenan los altavoces.");
 
 		} else {
 			// Empanao / no_atento: vibración volante + icono + sonido + beep + texto
+			// REMOVE
+			ConfiguracionHelper.removeMechanism(config, ConfiguracionHelper.MECH_SEAT_DRIVER);
+			ConfiguracionHelper.removeMechanism(config, ConfiguracionHelper.MECH_SEAT_COPILOT);
+			ConfiguracionHelper.removeMechanism(config, ConfiguracionHelper.MECH_DASHBOARD_ICON);
+			ConfiguracionHelper.removeMechanism(config, ConfiguracionHelper.MECH_DASHBOARD_TEXT);
+			ConfiguracionHelper.removeMechanism(config, ConfiguracionHelper.MECH_DASHBOARD_ICON2);
+			// ADD
 			ConfiguracionHelper.addMechanism(config, ConfiguracionHelper.MECH_STEERING_WHEEL);
 			ConfiguracionHelper.addMechanism(config, ConfiguracionHelper.MECH_DRIVER_ICON);
 			ConfiguracionHelper.addMechanism(config, ConfiguracionHelper.MECH_SPEAKER_SOUND);
 			ConfiguracionHelper.addMechanism(config, ConfiguracionHelper.MECH_SPEAKER_BEEP);
 			ConfiguracionHelper.addMechanism(config, ConfiguracionHelper.MECH_DRIVER_TEXT);
+			System.out.println("[INTERACT-1 No atento] Está vibrando el volante.");
+			System.out.println("[INTERACT-1 No atento] Se ha encendido la pantalla del conductor (texto e icono).");
+			System.out.println("[INTERACT-1 No atento] Suenan los altavoces y el beep.");
 		}
 		return config;
 	}
