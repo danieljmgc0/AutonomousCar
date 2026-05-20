@@ -17,10 +17,10 @@ import sua.autonomouscar.infraestructure.driving.ARC.L2_DrivingServiceARC;
 import sua.autonomouscar.interfaces.IIdentifiable;
 
 /**
- * ADS_L3-7 / ADS-1: en L3, si RightDistanceSensor no está disponible.
- * Si LIDAR disponible → sustitución del binding. Sino → quitar L3 activo.
+ * ADS_L3-7 / ADS-1: En L3, si RightDistanceSensor no está disponible.
+ * Si LIDAR está disponible => Sustituir el binding. Si no quitar L3 activo.
  *
- * Dispara cuando cambia 'sensor-derecho-disponible' (false = fallo) o 'nivel-autonomia'.
+ * Dispara cuando cambia 'sensor-derecho-disponible' que dé fallo o el nivel de autonomia
  */
 public class ReglaActivarSensorEnFallo extends AdaptationRule {
 
@@ -43,11 +43,10 @@ public class ReglaActivarSensorEnFallo extends AdaptationRule {
 
 	@Override
 	public boolean checkAffectedByChange(IKnowledgeProperty property) {
-		if (kp_nivel == null || kp_nivel.getValue() == null) return false;
-		if ((Integer) kp_nivel.getValue() != 3) return false;
-		// La regla dispara cuando el sensor derecho NO está disponible
-		if (kp_sensorDerecho == null || kp_sensorDerecho.getValue() == null) return false;
-		return Boolean.FALSE.equals(kp_sensorDerecho.getValue());
+		if (kp_nivel == null || kp_sensorDerecho == null) return false;
+		// Sólo se dispara si estamos en L3 y el sensor derecho no está disponible
+		return Integer.valueOf(3).equals(kp_nivel.getValue())
+			&& Boolean.FALSE.equals(kp_sensorDerecho.getValue());
 	}
 
 	@Override
@@ -64,7 +63,7 @@ public class ReglaActivarSensorEnFallo extends AdaptationRule {
 				"(" + IIdentifiable.ID + "=LIDAR-RightDistanceSensor)");
 
 		if (lidarRight != null && bundleL3 != null) {
-			// Rama A: sustituir RightDistanceSensor por LIDAR en el servicio L3 activo
+			// Sustituir RightDistanceSensor por LIDAR en el servicio L3 activo
 			SystemConfigurationHelper.componentToAdd(config, "device.LIDAR.RightDistanceSensor", "1.0.0");
 			SystemConfigurationHelper.bindingToRemove(config,
 					bundleL3, "1.0.0", L2_DrivingServiceARC.REQUIRED_RIGHTDISTANCESENSOR,
@@ -73,13 +72,12 @@ public class ReglaActivarSensorEnFallo extends AdaptationRule {
 					bundleL3, "1.0.0", L2_DrivingServiceARC.REQUIRED_RIGHTDISTANCESENSOR,
 					"device.LIDAR.RightDistanceSensor", "1.0.0", DistanceSensorARC.PROVIDED_SENSOR);
 		} else if (bundleL3 != null) {
-			// Rama B: sin redundancia → desactivar el servicio L3 (TakeOver / FallbackPlan)
+			// Desactivar el servicio L3 (TakeOver / FallbackPlan)
 			SystemConfigurationHelper.componentToRemove(config, bundleL3, "1.0.0");
 		}
 		return config;
 	}
 
-	/** Convierte el valor de modo-conduccion (service ID) al bundle ID del ARC correspondiente. */
 	private String modoCond2BundleId(String modoCond) {
 		if ("L3_HighwayChauffer".equals(modoCond))    return "driving.L3.HighwayChauffer";
 		if ("L3_CityChauffer".equals(modoCond))       return "driving.L3.CityChauffer";

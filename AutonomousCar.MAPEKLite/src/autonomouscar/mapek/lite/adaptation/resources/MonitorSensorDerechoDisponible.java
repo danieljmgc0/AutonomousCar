@@ -22,7 +22,9 @@ public class MonitorSensorDerechoDisponible extends Monitor {
 			IKnowledgeProperty kp = BasicMAPEKLiteLoopHelper.getKnowledgeProperty("sensor-derecho-disponible");
 			if (kp != null && !disponible.equals(kp.getValue()))
 				kp.setValue(disponible);
-		} catch (Exception e) { /* ignorar */ }
+		} catch (Exception e) {
+			this.logger.error(String.format("Error en %s.report: %s", ID, e.toString()));
+		}
 		return this;
 	}
 }

@@ -12,7 +12,7 @@ import es.upv.pros.tatami.adaptation.mapek.lite.structures.systemconfiguration.i
 import es.upv.pros.tatami.osgi.utils.interfaces.ITimeStamped;
 
 /**
- * ADS_L3-6: CityChauffer + autopista → HighwayChauffer (fluido) o TrafficJam (atasco).
+ * ADS_L3-6: Actualmente en CityChauffer y pasa el estado de la vía a autopista => HighwayChauffer (fluido) o TrafficJam (atasco)
  */
 public class ReglaActivarEstadoViaAutovia extends AdaptationRule {
 

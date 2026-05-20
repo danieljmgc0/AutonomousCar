@@ -12,9 +12,9 @@ import es.upv.pros.tatami.adaptation.mapek.lite.structures.systemconfiguration.i
 import es.upv.pros.tatami.osgi.utils.interfaces.ITimeStamped;
 
 /**
- * INTERACT-3: Ajusta mecanismos de notificación según ubicación del conductor (L3).
- * En asiento conductor → vibración asiento + texto consola + icono consola
- * Fuera del asiento    → dashboard + copiloto + altavoces (sin asiento/consola conductor)
+ * INTERACT-3: Ajusta mecanismos de notificación según ubicación del conductor (L3)
+ * En asiento conductor => vibración asiento + texto consola + icono consola
+ * Fuera del asiento    => dashboard + copiloto + altavoces (sin asiento/consola conductor)
  */
 public class ReglaCambioUbicacionConductor extends AdaptationRule {
 
@@ -34,8 +34,9 @@ public class ReglaCambioUbicacionConductor extends AdaptationRule {
 	@Override
 	public boolean checkAffectedByChange(IKnowledgeProperty property) {
 		if (kp_nivel == null || kp_asiento == null) return false;
-		if (kp_nivel.getValue() == null || kp_asiento.getValue() == null) return false;
-		return (Integer) kp_nivel.getValue() == 3;
+		// Sólo se dispara en L3 y cuando el valor del asiento ya está disponible.
+		return Integer.valueOf(3).equals(kp_nivel.getValue())
+			&& kp_asiento.getValue() != null;
 	}
 
 	@Override

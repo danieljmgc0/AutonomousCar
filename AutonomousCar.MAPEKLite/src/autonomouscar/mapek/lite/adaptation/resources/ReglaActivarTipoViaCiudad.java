@@ -12,7 +12,7 @@ import es.upv.pros.tatami.adaptation.mapek.lite.structures.systemconfiguration.i
 import es.upv.pros.tatami.osgi.utils.interfaces.ITimeStamped;
 
 /**
- * ADS_L3-3: nivel-autonomia==3 AND tipo-via==Ciudad → L3_HighwayChauffer → L3_CityChauffer.
+ * ADS_L3-3: Actualmente estás en L3_HighwayChauffer circulando por vía fluida entras a ciudad => L3_CityChauffer
  */
 public class ReglaActivarTipoViaCiudad extends AdaptationRule {
 
@@ -34,10 +34,9 @@ public class ReglaActivarTipoViaCiudad extends AdaptationRule {
 	@Override
 	public boolean checkAffectedByChange(IKnowledgeProperty property) {
 		if (kp_nivel == null || kp_tipo == null || kp_modo == null) return false;
-		if (kp_nivel.getValue() == null || kp_tipo.getValue() == null) return false;
-		return (Integer) kp_nivel.getValue() == 3
-				&& "Ciudad".equals(kp_tipo.getValue())
-				&& "L3_HighwayChauffer".equals(kp_modo.getValue());
+		return Integer.valueOf(3).equals(kp_nivel.getValue())
+			&& "Ciudad".equals(kp_tipo.getValue())
+			&& "L3_HighwayChauffer".equals(kp_modo.getValue());
 	}
 
 	@Override

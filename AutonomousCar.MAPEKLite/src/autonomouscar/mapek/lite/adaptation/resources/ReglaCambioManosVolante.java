@@ -12,11 +12,10 @@ import es.upv.pros.tatami.adaptation.mapek.lite.structures.systemconfiguration.i
 import es.upv.pros.tatami.osgi.utils.interfaces.ITimeStamped;
 
 /**
- * INTERACT-2: Ajusta mecanismos de notificación según si el conductor tiene las
- * manos en el volante (L3).
- * Con manos   → solo vibración volante (si lo requiere)
- * Sin manos   → resto de mecanismos (sin vibración volante)
- * Sin asiento → sin vibración asiento ni consola conductor
+ * INTERACT-2: Ajusta mecanismos de notificación según si el conductor tiene las manos en el volante (L3).
+ * Con manos   => solo vibración volante (si lo requiere)
+ * Sin manos   => resto de mecanismos (sin vibración volante)
+ * Sin asiento => sin vibración asiento ni consola conductor
  */
 public class ReglaCambioManosVolante extends AdaptationRule {
 
@@ -38,8 +37,9 @@ public class ReglaCambioManosVolante extends AdaptationRule {
 	@Override
 	public boolean checkAffectedByChange(IKnowledgeProperty property) {
 		if (kp_nivel == null || kp_manos == null) return false;
-		if (kp_nivel.getValue() == null || kp_manos.getValue() == null) return false;
-		return (Integer) kp_nivel.getValue() == 3;
+		// Sólo se dispara en L3 y cuando el valor de manos-volante ya está disponible.
+		return Integer.valueOf(3).equals(kp_nivel.getValue())
+			&& kp_manos.getValue() != null;
 	}
 
 	@Override
@@ -53,7 +53,7 @@ public class ReglaCambioManosVolante extends AdaptationRule {
 
 		if (manosEnVolante) {
 			// Con manos en volante: solo vibración en el volante
-			// REMOVE: mecanismos que NO se usan en este estado
+			// REMOVE
 			ConfiguracionHelper.removeMechanism(config, ConfiguracionHelper.MECH_SEAT_DRIVER);
 			ConfiguracionHelper.removeMechanism(config, ConfiguracionHelper.MECH_SEAT_COPILOT);
 			ConfiguracionHelper.removeMechanism(config, ConfiguracionHelper.MECH_SPEAKER_BEEP);
@@ -65,7 +65,6 @@ public class ReglaCambioManosVolante extends AdaptationRule {
 			ConfiguracionHelper.removeMechanism(config, ConfiguracionHelper.MECH_DASHBOARD_ICON2);
 			// ADD
 			ConfiguracionHelper.addMechanism(config, ConfiguracionHelper.MECH_STEERING_WHEEL);
-			System.out.println("[INTERACT-2 Manos en volante] Está vibrando el volante.");
 
 		} else if (asientoConductor) {
 			// Sin manos en volante, conductor en asiento: sin vibración volante, con vibración asiento
@@ -81,9 +80,6 @@ public class ReglaCambioManosVolante extends AdaptationRule {
 			ConfiguracionHelper.addMechanism(config, ConfiguracionHelper.MECH_DASHBOARD_ICON);
 			ConfiguracionHelper.addMechanism(config, ConfiguracionHelper.MECH_SEAT_DRIVER);
 			ConfiguracionHelper.addMechanism(config, ConfiguracionHelper.MECH_SEAT_COPILOT);
-			System.out.println("[INTERACT-2 Sin manos, conductor en asiento] Se ha encendido la pantalla central y del conductor.");
-			System.out.println("[INTERACT-2 Sin manos, conductor en asiento] Suenan los altavoces y el beep.");
-			System.out.println("[INTERACT-2 Sin manos, conductor en asiento] Están vibrando los asientos del conductor y copiloto.");
 
 		} else {
 			// Sin manos en volante, conductor fuera del asiento: sin vibración volante ni asiento conductor
@@ -99,9 +95,6 @@ public class ReglaCambioManosVolante extends AdaptationRule {
 			ConfiguracionHelper.addMechanism(config, ConfiguracionHelper.MECH_DRIVER_TEXT);
 			ConfiguracionHelper.addMechanism(config, ConfiguracionHelper.MECH_DASHBOARD_ICON);
 			ConfiguracionHelper.addMechanism(config, ConfiguracionHelper.MECH_SEAT_COPILOT);
-			System.out.println("[INTERACT-2 Sin manos, sin asiento conductor] Se ha encendido la pantalla central y del conductor.");
-			System.out.println("[INTERACT-2 Sin manos, sin asiento conductor] Suenan los altavoces y el beep.");
-			System.out.println("[INTERACT-2 Sin manos, sin asiento conductor] Está vibrando el asiento del copiloto.");
 		}
 		return config;
 	}

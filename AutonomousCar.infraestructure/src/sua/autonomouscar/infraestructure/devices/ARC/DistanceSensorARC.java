@@ -15,7 +15,6 @@ public class DistanceSensorARC extends AdaptiveReadyComponent implements IAdapti
 	
 	public DistanceSensorARC(BundleContext context, String bundleId, String id) {
 		super(context, bundleId);
-//		logger = SmartLogger.getLogger(DistanceSensorARC.class.getName());
 		logger = SmartLogger.getLogger(context.getBundle().getSymbolicName());
 		this.sensor = new DistanceSensor(this.context, id);
 	}

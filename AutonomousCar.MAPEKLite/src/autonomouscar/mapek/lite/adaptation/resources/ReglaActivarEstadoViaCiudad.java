@@ -12,7 +12,7 @@ import es.upv.pros.tatami.adaptation.mapek.lite.structures.systemconfiguration.i
 import es.upv.pros.tatami.osgi.utils.interfaces.ITimeStamped;
 
 /**
- * ADS_L3-5: TrafficJamChauffer + atasco + ciudad → CityChauffer.
+ * ADS_L3-5: Actualmente en TrafficJamChauffer y pasa el estado de tipo de vía a ciudad => CityChauffer
  */
 public class ReglaActivarEstadoViaCiudad extends AdaptationRule {
 

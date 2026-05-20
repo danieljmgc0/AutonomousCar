@@ -35,8 +35,8 @@ public class ReglaCambioAtencionConductor extends AdaptationRule {
 	@Override
 	public boolean checkAffectedByChange(IKnowledgeProperty property) {
 		if (kp_nivel == null || kp_atencion == null) return false;
-		if (kp_nivel.getValue() == null || kp_atencion.getValue() == null) return false;
-		return (Integer) kp_nivel.getValue() == 3;
+		return Integer.valueOf(3).equals(kp_nivel.getValue())
+			&& kp_atencion.getValue() != null;
 	}
 
 	@Override
@@ -60,8 +60,6 @@ public class ReglaCambioAtencionConductor extends AdaptationRule {
 			ConfiguracionHelper.addMechanism(config, ConfiguracionHelper.MECH_STEERING_WHEEL);
 			ConfiguracionHelper.addMechanism(config, ConfiguracionHelper.MECH_DRIVER_TEXT);
 			ConfiguracionHelper.addMechanism(config, ConfiguracionHelper.MECH_DRIVER_ICON);
-			System.out.println("[INTERACT-1 Atento] Está vibrando el volante.");
-			System.out.println("[INTERACT-1 Atento] Se ha encendido la pantalla del conductor (texto e icono).");
 
 		} else if ("Dormido".equals(atencion)) {
 			// Muy molestos: vibración volante + vibración asiento + altavoz sonido
@@ -77,9 +75,6 @@ public class ReglaCambioAtencionConductor extends AdaptationRule {
 			ConfiguracionHelper.addMechanism(config, ConfiguracionHelper.MECH_STEERING_WHEEL);
 			ConfiguracionHelper.addMechanism(config, ConfiguracionHelper.MECH_SEAT_DRIVER);
 			ConfiguracionHelper.addMechanism(config, ConfiguracionHelper.MECH_SPEAKER_SOUND);
-			System.out.println("[INTERACT-1 Dormido] Está vibrando el volante.");
-			System.out.println("[INTERACT-1 Dormido] Está vibrando el asiento del conductor.");
-			System.out.println("[INTERACT-1 Dormido] Suenan los altavoces.");
 
 		} else {
 			// Empanao / no_atento: vibración volante + icono + sonido + beep + texto
@@ -95,9 +90,6 @@ public class ReglaCambioAtencionConductor extends AdaptationRule {
 			ConfiguracionHelper.addMechanism(config, ConfiguracionHelper.MECH_SPEAKER_SOUND);
 			ConfiguracionHelper.addMechanism(config, ConfiguracionHelper.MECH_SPEAKER_BEEP);
 			ConfiguracionHelper.addMechanism(config, ConfiguracionHelper.MECH_DRIVER_TEXT);
-			System.out.println("[INTERACT-1 No atento] Está vibrando el volante.");
-			System.out.println("[INTERACT-1 No atento] Se ha encendido la pantalla del conductor (texto e icono).");
-			System.out.println("[INTERACT-1 No atento] Suenan los altavoces y el beep.");
 		}
 		return config;
 	}

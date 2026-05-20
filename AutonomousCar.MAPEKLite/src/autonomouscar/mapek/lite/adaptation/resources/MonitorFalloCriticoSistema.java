@@ -22,7 +22,9 @@ public class MonitorFalloCriticoSistema extends Monitor {
 			IKnowledgeProperty kp = BasicMAPEKLiteLoopHelper.getKnowledgeProperty("fallo-critico-sistema");
 			if (kp != null && !falloCritico.equals(kp.getValue()))
 				kp.setValue(falloCritico);
-		} catch (Exception e) { /* ignorar */ }
+		} catch (Exception e) {
+			this.logger.error(String.format("Error en %s.report: %s", ID, e.toString()));
+		}
 		return this;
 	}
 }

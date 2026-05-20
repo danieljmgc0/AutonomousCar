@@ -24,13 +24,13 @@ public class MonitorModoConduccion extends Monitor {
 			String modo;
 			if (serviceId.startsWith("L3_")) {
 				nivel = 3;
-				modo  = serviceId;          // e.g. "L3_HighwayChauffer"
+				modo  = serviceId;
 			} else if (serviceId.startsWith("L2_")) {
 				nivel = 2;
-				modo  = serviceId;          // e.g. "L2_AdaptiveCruiseControl"
+				modo  = serviceId;
 			} else if (serviceId.startsWith("L1_")) {
 				nivel = 1;
-				modo  = serviceId;          // e.g. "L1_AssistedDriving"
+				modo  = serviceId;
 			} else {
 				nivel = 0;
 				modo  = "L0_M";
@@ -44,7 +44,9 @@ public class MonitorModoConduccion extends Monitor {
 			if (kpModo != null && !modo.equals(kpModo.getValue()))
 				kpModo.setValue(modo);
 
-		} catch (Exception e) { /* ignorar */ }
+		} catch (Exception e) {
+			this.logger.error(String.format("Error en %s.report: %s", ID, e.toString()));
+		}
 		return this;
 	}
 }

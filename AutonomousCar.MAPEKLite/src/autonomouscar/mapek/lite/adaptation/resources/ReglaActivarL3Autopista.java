@@ -12,9 +12,9 @@ import es.upv.pros.tatami.adaptation.mapek.lite.structures.systemconfiguration.i
 import es.upv.pros.tatami.osgi.utils.interfaces.ITimeStamped;
 
 /**
- * Regla de activación inicial de L3: cuando el coche circula por autopista
- * con tráfico fluido y aún no está en L3, activa L3_HighwayChauffer.
- * Cubre la transición L0 → L3 (o L1/L2 → L3).
+ * Regla de activación inicial a L3: Se inicia en L0, por lo tanto
+ * cuando el coche circula por autopista con tráfico fluido y aún no está en L3
+ * activamos L3_HighwayChauffer.
  */
 public class ReglaActivarL3Autopista extends AdaptationRule {
 

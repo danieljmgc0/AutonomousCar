@@ -24,8 +24,8 @@ public class MonitorModo extends Monitor {
 			String value = (String) measure;
 			
 			IKnowledgeProperty kp = BasicMAPEKLiteLoopHelper.getKnowledgeProperty("Modo");
-			if ( kp.getValue() == null || kp.getValue() != value ) { // sólo actualizamos si el valor es diferente
-				this.logger.debug(String.format("Updating Knowledge Property %s TO %s", kp.getId(), value));
+			if ( kp.getValue() == null || kp.getValue() != value ) {
+				this.logger.debug(String.format("Actualizando el Knowledge Property %s A %s", kp.getId(), value));
 				kp.setValue(value);
 			}
 			

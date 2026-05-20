@@ -14,14 +14,8 @@ import es.upv.pros.tatami.osgi.utils.interfaces.ITimeStamped;
 
 /**
  * ADS_L3-1 (regla-en-carretera-estandar):
- *
- * SI nivel-autonomia==3 AND (tipo-via==Carretera OR tipo-via==OffRoad)
- *    AND L2 bundle ACTIVE  → desactivar L3 activo, activar L2_AdaptiveCruiseControl
- * ELSE IF nivel-autonomia==3 AND (tipo-via==Carretera OR tipo-via==OffRoad)
- *                           → desactivar L3 activo, activar L1_AssistedDriving
- *
- * posibilidad-conduccion es true cuando el bundle driving.L2.AdaptiveCruiseControl
- * está en estado ACTIVE en OSGi (su ARC está registrado).
+ *Estando en conducción autónoma nivel 3 se pasa a tipo de vía carretera estándar u off-road
+ *El ADS  desactiva conducción autónoma nivel 3 y activa nivel 2 (si es posible). Si no, activará nivel 1
  */
 public class ReglaEnCarreteraEstandar extends AdaptationRule {
 
@@ -47,13 +41,9 @@ public class ReglaEnCarreteraEstandar extends AdaptationRule {
 	@Override
 	public boolean checkAffectedByChange(IKnowledgeProperty property) {
 		if (kp_nivelAutonomia == null || kp_tipoVia == null) return false;
-		if (kp_nivelAutonomia.getValue() == null || kp_tipoVia.getValue() == null) return false;
-
-		int nivel = (Integer) kp_nivelAutonomia.getValue();
-		String tipo = (String) kp_tipoVia.getValue();
-		// Condición: en L3 y entramos en vía no apta para ningún servicio L3
-		// (Carretera estándar u off-road; Ciudad tiene su propio servicio L3_CityChauffer)
-		return nivel == 3 && ("Carretera".equals(tipo) || "OffRoad".equals(tipo));
+		Object tipo = kp_tipoVia.getValue();
+		return Integer.valueOf(3).equals(kp_nivelAutonomia.getValue())
+			&& ("Carretera".equals(tipo) || "OffRoad".equals(tipo));
 	}
 
 	@Override
@@ -61,7 +51,7 @@ public class ReglaEnCarreteraEstandar extends AdaptationRule {
 		IRuleComponentsSystemConfiguration config = SystemConfigurationHelper
 				.createPartialSystemConfiguration(ID + "_" + ITimeStamped.getCurrentTimeStamp());
 
-		// Quitar el servicio L3 actualmente activo (identificado por modo-conduccion)
+		// Quitar servicio L3 actualmente
 		String modoActual = (kp_modoCond != null) ? (String) kp_modoCond.getValue() : null;
 		if ("L3_HighwayChauffer".equals(modoActual)) {
 			ConfiguracionHelper.removeL3HighwayChauffer(config);
@@ -73,7 +63,7 @@ public class ReglaEnCarreteraEstandar extends AdaptationRule {
 			ConfiguracionHelper.removeAllL3(config);
 		}
 
-		// Comprobar en tiempo de ejecución si el bundle L2 está en estado ACTIVE en OSGi
+		// Comprobar disponiblidad del bundle L2 en OSGi, es decir, su estado es ACTIVE
 		boolean l2Disponible = false;
 		for (Bundle b : this.context.getBundles()) {
 			if (BUNDLE_L2.equals(b.getSymbolicName()) && b.getState() == Bundle.ACTIVE) {
@@ -83,10 +73,8 @@ public class ReglaEnCarreteraEstandar extends AdaptationRule {
 		}
 
 		if (l2Disponible) {
-			// SI nivel-autonomia==3 AND (Ciudad OR OffRoad) AND L2 bundle ACTIVE
 			ConfiguracionHelper.addL2AdaptiveCruiseControl(config);
 		} else {
-			// ELSE: L2 no disponible → nivel 1 conducción manual asistida (ADS_L3-1)
 			ConfiguracionHelper.addL1AssistedDriving(config);
 		}
 		return config;

@@ -18,9 +18,7 @@ import sua.autonomouscar.infraestructure.driving.ARC.L3_DrivingServiceARC;
 import sua.autonomouscar.interfaces.IIdentifiable;
 
 /**
- * ADS_L3-8: En L3, vincular siempre el FallbackPlan adecuado.
- * Preferente: ParkInTheRoadShoulder (si sensores disponibles).
- * Alternativa: Emergency.
+ * ADS_L3-8: En L3, vincular siempre el FallbackPlan adecuado, preferiblemente el ParkInTheRoadShoulder si su sensor está disponible, si no el de Emergency
  */
 public class ReglaActivarFallbackPlan extends AdaptationRule {
 
@@ -40,8 +38,8 @@ public class ReglaActivarFallbackPlan extends AdaptationRule {
 
 	@Override
 	public boolean checkAffectedByChange(IKnowledgeProperty property) {
-		if (kp_nivel == null || kp_nivel.getValue() == null) return false;
-		return (Integer) kp_nivel.getValue() == 3;
+		if (kp_nivel == null) return false;
+		return Integer.valueOf(3).equals(kp_nivel.getValue());
 	}
 
 	@Override
@@ -57,16 +55,15 @@ public class ReglaActivarFallbackPlan extends AdaptationRule {
 		String dsActivo = kp_modo != null ? (String) kp_modo.getValue() : null;
 
 		if (rightDs != null && rightLs != null && dsActivo != null) {
-			// Preferente: aparcar en el arcén
+			// Preferible
 			ConfiguracionHelper.addFallbackPlanParkInShoulder(config);
-			// Conectar el ParkInShoulder como fallback al servicio L3 activo
+			// Conectar ParkInShoulder como fallback al servicio L3 activo
 			SystemConfigurationHelper.bindingToAdd(config,
 					dsActivo, "1.0.0", L3_DrivingServiceARC.REQUIRED_FALLBACKPLAN,
 					"driving.FallbackPlan.ParkInTheRoadShoulder", "1.0.0", DrivingServiceARC.PROVIDED_DRIVINGSERVICE);
-			// Emergency como respaldo secundario (ya debería estar en config)
-			ConfiguracionHelper.addFallbackPlanEmergency(config);
+			ConfiguracionHelper.addFallbackPlanEmergency(config); // Por si no funciona el ParkInShoulder
 		} else {
-			// Solo emergencia
+			// Si no el de emergencia
 			ConfiguracionHelper.addFallbackPlanEmergency(config);
 			if (dsActivo != null) {
 				SystemConfigurationHelper.bindingToAdd(config,

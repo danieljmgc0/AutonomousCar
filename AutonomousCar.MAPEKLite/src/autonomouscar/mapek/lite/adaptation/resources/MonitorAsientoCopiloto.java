@@ -22,7 +22,9 @@ public class MonitorAsientoCopiloto extends Monitor {
 			IKnowledgeProperty kp = BasicMAPEKLiteLoopHelper.getKnowledgeProperty("asiento-copiloto-ocupado");
 			if (kp != null && !valor.equals(kp.getValue()))
 				kp.setValue(valor);
-		} catch (Exception e) { /* ignorar */ }
+		} catch (Exception e) {
+			this.logger.error(String.format("Error en %s.report: %s", ID, e.toString()));
+		}
 		return this;
 	}
 }

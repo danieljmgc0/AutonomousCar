@@ -31,7 +31,9 @@ public class MonitorTipoVia extends Monitor {
 			IKnowledgeProperty kp = BasicMAPEKLiteLoopHelper.getKnowledgeProperty("tipo-via");
 			if (kp != null && !valor.equals(kp.getValue()))
 				kp.setValue(valor);
-		} catch (Exception e) { /* ignorar */ }
+		} catch (Exception e) {
+			this.logger.error(String.format("Error en %s.report: %s", ID, e.toString()));
+		}
 		return this;
 	}
 }

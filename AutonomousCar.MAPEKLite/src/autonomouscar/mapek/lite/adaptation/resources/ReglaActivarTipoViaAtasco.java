@@ -12,7 +12,7 @@ import es.upv.pros.tatami.adaptation.mapek.lite.structures.systemconfiguration.i
 import es.upv.pros.tatami.osgi.utils.interfaces.ITimeStamped;
 
 /**
- * ADS_L3-2: En L3_HighwayChauffer con atasco → activar L3_TrafficJamChauffer.
+ * ADS_L3-2: Actualmente L3_HighwayChauffer fluido y pasa el estado del tráfico a atasco => activar L3_TrafficJamChauffer
  */
 public class ReglaActivarTipoViaAtasco extends AdaptationRule {
 
