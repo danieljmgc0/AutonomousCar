@@ -20,8 +20,7 @@ public class SondaPosibilidadConduccion extends Probe implements ISimulationElem
 
 	@Override
 	public void onSimulationStep(Integer step, long time_lapse_millis) {
-		// L2 está disponible si su ARC está registrado en OSGi (bundle arrancado),
-		// independientemente de si está actualmente desplegado como servicio activo.
+		// L2 está disponible si su ARC está registrado en OSGi (bundle arrancado) incluso si está desplegado como servicio activo.
 		String filter = String.format("(%s=%s)", IIdentifiable.ID, "driving.L2.AdaptiveCruiseControl");
 		boolean disponible = OSGiUtils.getService(this.context, IAdaptiveReadyComponent.class, filter) != null;
 		this.reportMeasure(disponible);

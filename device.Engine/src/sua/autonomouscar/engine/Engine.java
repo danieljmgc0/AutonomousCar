@@ -4,18 +4,36 @@ import sua.autonomouscar.devices.interfaces.IEngine;
 
 public class Engine implements IEngine{
 
+    private static final int MIN_RPM = 0;
+    private static final int MAX_RPM = 6000;
 	protected int rpm = 0;
-	@Override
-	public IEngine accelerate(int rpm) {
-		// TODO Auto-generated method stub
-		return null;
-	}
 
-	@Override
-	public IEngine decelerate(int rpm) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public IEngine accelerate(int rpm) {
+
+        this.rpm += rpm;
+        if (this.rpm > MAX_RPM) {
+            this.rpm = MAX_RPM;
+        }
+
+        System.out.println("[Engine] Accelerating to " + this.rpm + " rpm");
+
+        return this;
+    }
+
+    @Override
+    public IEngine decelerate(int rpm) {
+
+        this.rpm -= rpm;
+
+        if (this.rpm < MIN_RPM) {
+            this.rpm = MIN_RPM;
+        }
+        
+        System.out.println("[Engine] Decelerating to " + this.rpm + " rpm");
+
+        return this;
+    }
 
 	@Override
 	public IEngine setRPM(int rpm) {

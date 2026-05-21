@@ -41,7 +41,6 @@ public class L3_TrafficJamChauffer extends L3_DrivingService implements IL3_Traf
 
 		
 		// L3 traffic jam chauffer
-		
 		// Comprobamos que NO podemos mantener la conducción en nivel 3 de autonomia
 		if ( this.getRoadSensor().getRoadType() == ERoadType.OFF_ROAD || this.getRoadSensor().getRoadType() == ERoadType.STD_ROAD ) {
 			// No podemos seguir conduciendo de manera autónoma
@@ -65,11 +64,7 @@ public class L3_TrafficJamChauffer extends L3_DrivingService implements IL3_Traf
 			
 			return this;
 		}
-
-		//
-		// Control de la función primaria: MOVIMIENTO LONGITUDINAL
-		//
-		
+		// Control de la función primaria: MOVIMIENTO LONGITUDINAL	
 		boolean longitudinal_correction_performed = false;
 		ISpeedometer speedometer = OSGiUtils.getService(context, ISpeedometer.class);
 		int currentSpeed = speedometer.getCurrentSpeed();
@@ -109,10 +104,7 @@ public class L3_TrafficJamChauffer extends L3_DrivingService implements IL3_Traf
 			
 		}
 
-		//
 		// Control de la función primaria: MOVIMIENTO LATERAL
-		//
-		
 		boolean lateral_correction_performed = false;
 		// Control de las distancias laterales
 		if ( this.getRightDistanceSensor().getDistance() < this.getLateralSecurityDistance() ) {
@@ -161,13 +153,7 @@ public class L3_TrafficJamChauffer extends L3_DrivingService implements IL3_Traf
 		}
 		
 		
-		//
-		// Interacción con el conductor
-		//
-
-		// Advertimos al humano sí ...
-
-		// ... està distraído o dormido ...
+		// Interacción con el conductor. Advertimos al humano sí està distraído o dormido
 		switch (this.getHumanSensors().getFaceStatus()) {
 		case DISTRACTED:
 			this.getNotificationService().notify("Please, look forward!");
@@ -180,12 +166,10 @@ public class L3_TrafficJamChauffer extends L3_DrivingService implements IL3_Traf
 		}
 		
 				
-		// ... el conductor no tiene las manos en el volante ...
 		if ( !this.getHumanSensors().areTheHandsOnTheWheel() ) {
 			this.getNotificationService().notify("Please, put the hands on the wheel!");
 		}
-		
-		// ... el conductor no está en el asiento del conductor ...
+	
 		if ( !this.getHumanSensors().isDriverSeatOccupied() ) {
 			if ( this.getHumanSensors().isCopilotSeatOccupied() )
 				this.getNotificationService().notify("Please, move to the driver seat!");

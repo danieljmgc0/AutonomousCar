@@ -64,10 +64,7 @@ public class L3_CityChauffer extends L3_DrivingService implements IL3_CityChauff
 			return this;
 		}
 
-		//
-		// Control de la función primaria: MOVIMIENTO LONGITUDINAL
-		//
-		
+
 		boolean longitudinal_correction_performed = false;
 		ISpeedometer speedometer = OSGiUtils.getService(context, ISpeedometer.class);
 		int currentSpeed = speedometer.getCurrentSpeed();
@@ -107,9 +104,6 @@ public class L3_CityChauffer extends L3_DrivingService implements IL3_CityChauff
 			
 		}
 
-		//
-		// Control de la función primaria: MOVIMIENTO LATERAL
-		//
 		
 		boolean lateral_correction_performed = false;
 		// Control de las distancias laterales
@@ -158,14 +152,7 @@ public class L3_CityChauffer extends L3_DrivingService implements IL3_CityChauff
 			logger.info("Controlling the driving function. Mantaining the current configuration ...");
 		}
 		
-		
-		//
-		// Interacción con el conductor
-		//
 
-		// Advertimos al humano sí ...
-
-		// ... està distraído o dormido ...
 		switch (this.getHumanSensors().getFaceStatus()) {
 		case DISTRACTED:
 			this.getNotificationService().notify("Please, look forward!");
@@ -178,17 +165,15 @@ public class L3_CityChauffer extends L3_DrivingService implements IL3_CityChauff
 		}
 		
 				
-		// ... el conductor no tiene las manos en el volante ...
 		if ( !this.getHumanSensors().areTheHandsOnTheWheel() ) {
 			this.getNotificationService().notify("Please, put the hands on the wheel!");
 		}
 		
-		// ... el conductor no está en el asiento del conductor ...
+		// El conductor no está en el asiento del conductor ...
 		if ( !this.getHumanSensors().isDriverSeatOccupied() ) {
 			if ( this.getHumanSensors().isCopilotSeatOccupied() )
 				this.getNotificationService().notify("Please, move to the driver seat!");
 			else {
-				// No se puede conducir en L3 sin conductor. Activamos plan de emergencia
 				this.getNotificationService().notify("Cannot drive with a driver! Activating the Fallback Plan ...");
 				this.activateTheFallbackPlan();
 			}
